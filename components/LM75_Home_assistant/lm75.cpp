@@ -29,7 +29,7 @@ void LM75Sensor::setup() {
     //this->mark_failed();
     //return;
   //}
-
+//pippo
   this->write_config();
 }
 
