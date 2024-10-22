@@ -75,16 +75,21 @@ bool PCA9555Component::digital_read(uint8_t pin) {
 }
 
 void PCA9555Component::digital_write(uint8_t pin, bool value) {
-  if (value) {
-    this->output_mask_ |= (1 << pin);
-  } else {
-    this->output_mask_ &= ~(1 << pin);
-  }
   if (pin < 8) {
+    if (value) {
+      this->output_mask_ |= (1 << pin);
+    } else {
+      this->output_mask_ &= ~(1 << pin);
+    }
     this->write_register_(OUTPUT_P0_REG, this->output_mask_);
-  } else {
-    this->write_register_(OUTPUT_P1_REG, this->output_mask_);
-  }
+    } else {
+    if (value) {
+      this->output_mask_ |= (1 << (pin-8));
+    } else {
+      this->output_mask_ &= ~(1 << (pin-8));
+    }
+      this->write_register_(OUTPUT_P1_REG, this->output_mask_);
+    }  
 }
 
 void PCA9554Component::pin_mode(uint8_t pin, gpio::Flags flags) {
