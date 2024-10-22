@@ -1,59 +1,66 @@
-#include "pca9554.h"
+#include "pca9555.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
-namespace pca9554 {
+namespace pca9555 {
 
-// for 16 bit expanders, these addresses will be doubled.
-const uint8_t INPUT_REG = 0;
-const uint8_t OUTPUT_REG = 1;
-const uint8_t INVERT_REG = 2;
-const uint8_t CONFIG_REG = 3;
+// for 16 bit expanders, these addresses are doubled.
+const uint8_t INPUT_P0_REG = 0;
+const uint8_t INPUT_P1_REG = 1;
+const uint8_t OUTPUT_P0_REG = 2;
+const uint8_t OUTPUT_P1_REG = 3;
+const uint8_t INVERT_P0_REG = 4;
+const uint8_t INVERT_P1_REG = 5;
+const uint8_t CONFIG_P0_REG = 6;
+const uint8_t CONFIG_P1_REG = 7;
 
-static const char *const TAG = "pca9554";
+static const char *const TAG = "pca9555";
 
-void PCA9554Component::setup() {
-  ESP_LOGCONFIG(TAG, "Setting up PCA9554/PCA9554A...");
+void PCA9555Component::setup() {
+  ESP_LOGCONFIG(TAG, "Setting up PCA9555...");
   this->reg_width_ = (this->pin_count_ + 7) / 8;
   // Test to see if device exists
   if (!this->read_inputs_()) {
-    ESP_LOGE(TAG, "PCA95xx not detected at 0x%02X", this->address_);
+    ESP_LOGE(TAG, "PCA9555 not detected at 0x%02X", this->address_);
     this->mark_failed();
     return;
   }
 
   // No polarity inversion
-  this->write_register_(INVERT_REG, 0);
+  this->write_register_(INVERT_P0_REG, 0);
+  this->write_register_(INVERT_P1_REG, 0);
   // All inputs at initialization
   this->config_mask_ = 0;
   // Invert mask as the part sees a 1 as an input
-  this->write_register_(CONFIG_REG, ~this->config_mask_);
+  this->write_register_(CONFIG_P0_REG, ~this->config_mask_);
+  this->write_register_(CONFIG_P1_REG, ~this->config_mask_);
   // All outputs low
   this->output_mask_ = 0;
-  this->write_register_(OUTPUT_REG, this->output_mask_);
+  this->write_register_(OUTPUT_P0_REG, this->output_mask_);
+  this->write_register_(OUTPUT_P1_REG, this->output_mask_);
   // Read the inputs
   this->read_inputs_();
   ESP_LOGD(TAG, "Initialization complete. Warning: %d, Error: %d", this->status_has_warning(),
            this->status_has_error());
 }
 
-void PCA9554Component::loop() {
+void PCA9555Component::loop() {
   // The read_inputs_() method will cache the input values from the chip.
   this->read_inputs_();
   // Clear all the previously read flags.
   this->was_previously_read_ = 0x00;
 }
 
-void PCA9554Component::dump_config() {
-  ESP_LOGCONFIG(TAG, "PCA9554:");
+void PCA9555Component::dump_config() {
+  ESP_LOGCONFIG(TAG, "PCA9555:");
   ESP_LOGCONFIG(TAG, "  I/O Pins: %d", this->pin_count_);
   LOG_I2C_DEVICE(this)
   if (this->is_failed()) {
-    ESP_LOGE(TAG, "Communication with PCA9554 failed!");
+    ESP_LOGE(TAG, "Communication with PCA9555 failed!");
   }
 }
 
-bool PCA9554Component::digital_read(uint8_t pin) {
+bool PCA9555Component::digital_read(uint8_t pin) {
   // Note: We want to try and avoid doing any I2C bus read transactions here
   // to conserve I2C bus bandwidth. So what we do is check to see if we
   // have seen a read during the time esphome is running this loop. If we have,
@@ -67,13 +74,17 @@ bool PCA9554Component::digital_read(uint8_t pin) {
   return this->input_mask_ & (1 << pin);
 }
 
-void PCA9554Component::digital_write(uint8_t pin, bool value) {
+void PCA9555Component::digital_write(uint8_t pin, bool value) {
   if (value) {
     this->output_mask_ |= (1 << pin);
   } else {
     this->output_mask_ &= ~(1 << pin);
   }
-  this->write_register_(OUTPUT_REG, this->output_mask_);
+  if (pin < 8) {
+    this->write_register_(OUTPUT_P0_REG, this->output_mask_);
+  } else {
+    this->write_register_(OUTPUT_P1_REG, this->output_mask_);
+  }
 }
 
 void PCA9554Component::pin_mode(uint8_t pin, gpio::Flags flags) {
