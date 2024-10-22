@@ -5,11 +5,11 @@
 #include "esphome/components/i2c/i2c.h"
 
 namespace esphome {
-namespace pca9554 {
+namespace pca9555 {
 
-class PCA9554Component : public Component, public i2c::I2CDevice {
+class PCA9555Component : public Component, public i2c::I2CDevice {
  public:
-  PCA9554Component() = default;
+  PCA9555Component() = default;
 
   /// Check i2c availability and setup masks
   void setup() override;
@@ -52,7 +52,7 @@ class PCA9554Component : public Component, public i2c::I2CDevice {
 };
 
 /// Helper class to expose a PCA9554 pin as an internal input GPIO pin.
-class PCA9554GPIOPin : public GPIOPin {
+class PCA9555GPIOPin : public GPIOPin {
  public:
   void setup() override;
   void pin_mode(gpio::Flags flags) override;
@@ -60,17 +60,17 @@ class PCA9554GPIOPin : public GPIOPin {
   void digital_write(bool value) override;
   std::string dump_summary() const override;
 
-  void set_parent(PCA9554Component *parent) { parent_ = parent; }
+  void set_parent(PCA9555Component *parent) { parent_ = parent; }
   void set_pin(uint8_t pin) { pin_ = pin; }
   void set_inverted(bool inverted) { inverted_ = inverted; }
   void set_flags(gpio::Flags flags) { flags_ = flags; }
 
  protected:
-  PCA9554Component *parent_;
+  PCA9555Component *parent_;
   uint8_t pin_;
   bool inverted_;
   gpio::Flags flags_;
 };
 
-}  // namespace pca9554
+}  // namespace pca9555
 }  // namespace esphome
