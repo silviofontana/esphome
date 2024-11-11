@@ -45,7 +45,7 @@ def validate_mode(value):
     return value
 
 
-PCA9554_PIN_SCHEMA = cv.All(
+PCA9555_PIN_SCHEMA = cv.All(
     {
         cv.GenerateID(): cv.declare_id(PCA9555GPIOPin),
         cv.Required(CONF_PCA9555): cv.use_id(PCA9555Component),
